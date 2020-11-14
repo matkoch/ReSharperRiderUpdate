@@ -1,0 +1,25 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+build
+output
+.gradle
+.tmp
+
+# User-specific files
+*.suo
+*.user
+*.sln.docstates
+*.cache
+.idea/.name
+.idea/*.xml
+.idea/modules
+.idea/libraries
+.idea/.idea.*/.idea/.name
+.idea/.idea.*/.idea/*.xml
+.idea/**/*.iml
+
+# IDEs
+.vs
+_ReSharper*
+_dotTrace*
