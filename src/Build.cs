@@ -37,9 +37,9 @@ class Build : NukeBuild, IGlobalTool
     AbsolutePath WorkingDirectory => (AbsolutePath) EnvironmentInfo.WorkingDirectory;
 
 #if UNIX
-    [LocalExecutable("gradlew")] readonly Tool Gradle;
+    Tool Gradle => ToolResolver.GetLocalTool(WorkingDirectory / "gradlew");
 #else
-    [LocalExecutable("gradlew.bat")] readonly Tool Gradle;
+    Tool Gradle => ToolResolver.GetLocalTool(WorkingDirectory / "gradlew.bat");
 #endif
 
     [PathExecutable("powershell")] readonly Tool PowerShell;
