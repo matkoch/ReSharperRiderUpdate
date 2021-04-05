@@ -143,7 +143,7 @@ class Build : NukeBuild, IGlobalTool
         .Executes(() =>
         {
             if (File.Exists(GradleBuildFile))
-                Gradle($":buildPlugin -PPluginVersion={ReSharperVersion}");
+                Gradle($":buildPlugin -PPluginVersion={ReSharperVersion} --no-daemon");
             else
                 PowerShell($".\\buildPlugin.ps1 -Version {ReSharperVersion}");
         });
@@ -161,7 +161,7 @@ class Build : NukeBuild, IGlobalTool
         .Executes(() =>
         {
             if (File.Exists(GradleBuildFile))
-                Gradle($":publishPlugin -PPluginVersion={ReSharperVersion} -PPublishToken={PublishToken}");
+                Gradle($":publishPlugin -PPluginVersion={ReSharperVersion} -PPublishToken={PublishToken} --no-daemon");
             else
                 PowerShell($".\\publishPlugin.ps1 -Version {ReSharperVersion} -ApiKey {PublishToken}");
         });
