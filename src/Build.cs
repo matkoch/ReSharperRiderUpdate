@@ -65,7 +65,7 @@ class Build : NukeBuild, IGlobalTool
     string GradlePropertiesFile => WorkingDirectory / "gradle.properties";
 
     string IdeaPrereleaseTag => ReSharperVersion.IsPrerelease
-        ? $"-{ReSharperVersion.ReleaseLabels.Single().Replace("0", string.Empty).ToUpperInvariant()}-SNAPSHOT"
+        ? $"-{ReSharperVersion.ReleaseLabels.Single().Replace("eap0", "eap").ToUpperInvariant()}-SNAPSHOT"
         : null;
 
     string IdeaVersion => $"{ReSharperVersion.Major}.{ReSharperVersion.Minor}{IdeaPrereleaseTag}";
@@ -132,6 +132,7 @@ class Build : NukeBuild, IGlobalTool
         });
 
     Target Update => _ => _
+        .WhenSkipped(DependencyBehavior.Skip)
         .DependsOn(UpdateReSharperSdk)
         .DependsOn(UpdateGradleBuild)
         .DependsOn(UpdateChangelog);
