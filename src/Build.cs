@@ -154,7 +154,7 @@ class Build : NukeBuild, IGlobalTool
     Target Publish => _ => _
         .DependsOn(Update)
         .DependsOn(FinalizeChangelog)
-        .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
+        // .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
         .Triggers(Commit)
         .WhenSkipped(DependencyBehavior.Skip)
         .Produces(WorkingDirectory / "output" / "*")
