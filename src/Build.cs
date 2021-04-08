@@ -162,9 +162,9 @@ class Build : NukeBuild, IGlobalTool
         .Executes(() =>
         {
             if (File.Exists(GradleBuildFile))
-                Gradle($":publishPlugin -PPluginVersion={ReSharperVersion} -PPublishToken={PublishToken} --no-daemon");
+                Gradle($":publishPlugin -PPluginVersion={ReSharperVersion} -PPublishToken={PublishToken} --no-daemon", logInvocation: false);
             else
-                PowerShell($".\\publishPlugin.ps1 -Version {ReSharperVersion} -ApiKey {PublishToken}");
+                PowerShell($".\\publishPlugin.ps1 -Version {ReSharperVersion} -ApiKey {PublishToken}", logInvocation: false);
         });
 
     // [GitRepository] readonly GitRepository GitRepository;
