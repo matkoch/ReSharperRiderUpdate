@@ -68,7 +68,7 @@ class Build : NukeBuild, IGlobalTool
         ? $"-{ReSharperVersion.ReleaseLabels.Single().Replace("eap0", "eap").ToUpperInvariant()}-SNAPSHOT"
         : null;
 
-    string IdeaVersion => $"{ReSharperVersion.Major}.{ReSharperVersion.Minor}{IdeaPrereleaseTag}";
+    string IdeaVersion => $"{ReSharperVersion.Major}.{ReSharperVersion.Minor}.{ReSharperVersion.Patch}{IdeaPrereleaseTag}";
 
     [LatestMyGetVersion("rd-snapshots", "rd-gen")] readonly string RdGenVersion;
 
