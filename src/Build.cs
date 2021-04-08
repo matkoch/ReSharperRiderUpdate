@@ -154,7 +154,7 @@ class Build : NukeBuild, IGlobalTool
     Target Publish => _ => _
         .DependsOn(Update)
         .DependsOn(FinalizeChangelog)
-        .Triggers(Commit)
+        // .Triggers(Commit)
         .WhenSkipped(DependencyBehavior.Skip)
         .Produces(WorkingDirectory / "output" / "*")
         .Requires(() => PublishToken)
