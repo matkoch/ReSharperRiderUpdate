@@ -126,6 +126,7 @@ class Build : NukeBuild, IGlobalTool
     Target FinalizeChangelog => _ => _
         .After(UpdateChangelog)
         .OnlyWhenStatic(() => !ReSharperVersion.IsPrerelease)
+        .OnlyWhenStatic(() => Changelog.Unreleased != null)
         .Executes(() =>
         {
             ChangelogTasks.FinalizeChangelog(ChangelogFile, ReSharperVersion.ToString());
