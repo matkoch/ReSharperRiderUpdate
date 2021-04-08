@@ -154,7 +154,6 @@ class Build : NukeBuild, IGlobalTool
     Target Publish => _ => _
         .DependsOn(Update)
         .DependsOn(FinalizeChangelog)
-        // .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
         .Triggers(Commit)
         .WhenSkipped(DependencyBehavior.Skip)
         .Produces(WorkingDirectory / "output" / "*")
@@ -177,6 +176,7 @@ class Build : NukeBuild, IGlobalTool
 
     Target Commit => _ => _
         .DependsOn(Update)
+        .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
         .Executes(() =>
         {
             if (File.Exists(GradleBuildFile))
