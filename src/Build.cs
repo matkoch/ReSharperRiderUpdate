@@ -117,7 +117,7 @@ class Build : NukeBuild, IGlobalTool
                 collection: new[]
                 {
                     $"## vNext",
-                    $"- Added support for {products.JoinCommaAnd()} {ReSharperShortVersion}",
+                    $"- Added support for {products.Join(" and ")} {ReSharperShortVersion}",
                     string.Empty
                 });
             WriteAllLines(ChangelogFile, changelogLines);
