@@ -74,6 +74,12 @@ class Build : NukeBuild, IGlobalTool
 
     [LatestGitHubRelease("JetBrains/gradle-intellij-plugin", TrimPrefix = true)] readonly string GradlePluginVersion;
 
+    [LatestMavenVersion(
+        repository: "plugins.gradle.org",
+        groupId: "org.jetbrains.kotlin.jvm",
+        artifactId: "org.jetbrains.kotlin.jvm.gradle.plugin")]
+    readonly string KotlinJvmVersion;
+
     bool HasRiderImplementation => File.Exists(GradlePropertiesFile) && File.Exists(GradleBuildFile);
 
     Target UpdateGradleBuild => _ => _
@@ -93,6 +99,9 @@ class Build : NukeBuild, IGlobalTool
                     .ReplaceRegex(
                         @"id 'com\.jetbrains\.rdgen' version '\d+\.\d+(\.\d+)?'",
                         x => $"id 'com.jetbrains.rdgen' version '{RdGenVersion}'")
+                    .ReplaceRegex(
+                        @"id 'org\.jetbrains\.kotlin\.jvm' version '\d+\.\d+(\.\d+)?'",
+                        x => $"id 'org.jetbrains.kotlin.jvm' version '{KotlinJvmVersion}'")
                     .ReplaceRegex(
                         @"id 'org\.jetbrains\.intellij' version '\d+\.\d+(\.\d+)?'",
                         x => $@"id 'org.jetbrains.intellij' version '{GradlePluginVersion}'"));
