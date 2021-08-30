@@ -91,8 +91,8 @@ class Build : NukeBuild, IGlobalTool
                 GradleBuildFile,
                 ReadAllText(GradleBuildFile)
                     .ReplaceRegex(
-                        @"com\.jetbrains\.rd:rd-gen:\d+\.\d+(\.\d+)?",
-                        x => $"com.jetbrains.rd:rd-gen:{RdGenVersion}")
+                        @"id 'com\.jetbrains\.rdgen' version '\d+\.\d+(\.\d+)?'",
+                        x => $"id 'com.jetbrains.rdgen' version '{RdGenVersion}'")
                     .ReplaceRegex(
                         @"id 'org\.jetbrains\.intellij' version '\d+\.\d+(\.\d+)?'",
                         x => $@"id 'org.jetbrains.intellij' version '{GradlePluginVersion}'"));
