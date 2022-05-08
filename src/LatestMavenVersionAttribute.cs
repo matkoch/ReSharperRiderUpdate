@@ -20,10 +20,12 @@ public class LatestMavenVersionAttribute : ValueInjectionAttributeBase
         _artifactId = artifactId;
     }
 
+    public bool IncludePrerelease { get; set; }
+
     public override object GetValue(MemberInfo member, object instance)
     {
         var rssFile = NukeBuild.TemporaryDirectory / $"{_groupId}-{_artifactId ?? _groupId}.xml";
         HttpTasks.HttpDownloadFile($"https://{_repository.TrimStart("https").TrimStart("http").TrimStart("://").TrimEnd("/")}/m2/{_groupId.Replace(".", "/")}/{_artifactId ?? _groupId}/maven-metadata.xml", rssFile);
-        return XmlTasks.XmlPeek(rssFile, ".//version").Last();
+        return XmlTasks.XmlPeek(rssFile, ".//version").Last(x => !x.Contains('-') || IncludePrerelease);
     }
 }
