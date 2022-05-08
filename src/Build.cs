@@ -71,7 +71,7 @@ class Build : NukeBuild, IGlobalTool
 
     string IdeaVersion => $"{ReSharperVersion.Major}.{ReSharperVersion.Minor}{IdeaPrereleaseTag}";
 
-    [LatestMyGetVersion("rd-snapshots", "rd-gen")] readonly string RdGenVersion;
+    [LatestGitHubRelease("JetBrains/rd", NamePattern = @"^\d+\.\d+\.\d+$")] readonly string RdGenVersion;
 
     [LatestGitHubRelease("JetBrains/gradle-intellij-plugin", TrimPrefix = true)] readonly string GradlePluginVersion;
 
