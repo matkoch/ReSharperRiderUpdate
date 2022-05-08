@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Nuke.Common.Execution;
+using Nuke.Common.Utilities;
 
 public static class Extensions
 {
@@ -11,7 +11,7 @@ public static class Extensions
         object target,
         BindingFlags? bindingFlags = null)
     {
-        var members = type.GetMember(memberName, bindingFlags ?? (target != null ? ReflectionService.Instance : ReflectionService.Static));
+        var members = type.GetMember(memberName, bindingFlags ?? (target != null ? ReflectionUtility.Instance : ReflectionUtility.Static));
         var member = members.FirstOrDefault();
         return member switch
         {

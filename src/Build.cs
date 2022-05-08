@@ -9,6 +9,7 @@ using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
+using Serilog;
 using static Nuke.Common.ChangeLog.ChangelogTasks;
 using static Nuke.Common.IO.TextTasks;
 using static Nuke.Common.IO.XmlTasks;
@@ -27,11 +28,11 @@ class Build : NukeBuild, IGlobalTool
     Target Versions => _ => _
         .Executes(() =>
         {
-            Logger.Normal($"{nameof(ReSharperVersion)} = {ReSharperVersion}");
-            Logger.Normal($"{nameof(IdeaPrereleaseTag)} = {IdeaPrereleaseTag}");
-            Logger.Normal($"{nameof(IdeaVersion)} = {IdeaVersion}");
-            Logger.Normal($"{nameof(RdGenVersion)} = {RdGenVersion}");
-            Logger.Normal($"{nameof(GradlePluginVersion)} = {GradlePluginVersion}");
+            Log.Information("{Name} = {Value}", nameof(ReSharperVersion), ReSharperVersion);
+            Log.Information("{Name} = {Value}", nameof(IdeaPrereleaseTag), IdeaPrereleaseTag);
+            Log.Information("{Name} = {Value}", nameof(IdeaVersion), IdeaVersion);
+            Log.Information("{Name} = {Value}", nameof(RdGenVersion), RdGenVersion);
+            Log.Information("{Name} = {Value}", nameof(GradlePluginVersion), GradlePluginVersion);
         });
 
     AbsolutePath WorkingDirectory => (AbsolutePath) EnvironmentInfo.WorkingDirectory;

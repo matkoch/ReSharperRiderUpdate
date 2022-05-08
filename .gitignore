@@ -1,3 +1,5 @@
+.nuke/temp
+
 # Build artifacts
 [Bb]in/
 [Oo]bj/
