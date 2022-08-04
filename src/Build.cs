@@ -9,6 +9,7 @@ using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
+using Octokit;
 using Serilog;
 using static Nuke.Common.ChangeLog.ChangelogTasks;
 using static Nuke.Common.IO.TextTasks;
@@ -71,7 +72,15 @@ class Build : NukeBuild, IGlobalTool
 
     string IdeaVersion => $"{ReSharperVersion.Major}.{ReSharperVersion.Minor}{IdeaPrereleaseTag}";
 
-    [LatestGitHubRelease("JetBrains/rd", NamePattern = @"^\d+\.\d+\.\d+$")] readonly string RdGenVersion;
+    string RdGenVersion
+    {
+        get
+        {
+            var client = new GitHubClient(new ProductHeaderValue(nameof(NukeBuild)));
+            var releases = client.Repository.Release.GetAll("JetBrains", "rd").GetAwaiter().GetResult();
+            return releases.First(x => Regex.IsMatch(x.Name, @$"^{ReSharperVersion.Major}\.{ReSharperVersion.Minor}\.\d+$")).TagName;
+        }
+    }
 
     [LatestGitHubRelease("JetBrains/gradle-intellij-plugin", TrimPrefix = true)] readonly string GradlePluginVersion;
 
