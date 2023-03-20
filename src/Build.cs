@@ -1,10 +1,8 @@
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NuGet.Versioning;
 using Nuke.Common;
 using Nuke.Common.ChangeLog;
-using Nuke.Common.CI;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Utilities;
@@ -12,7 +10,7 @@ using Nuke.Common.Utilities.Collections;
 using Octokit;
 using Serilog;
 using static Nuke.Common.ChangeLog.ChangelogTasks;
-using static Nuke.Common.IO.TextTasks;
+using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.XmlTasks;
 using static Nuke.Common.Tools.Git.GitTasks;
 
@@ -34,24 +32,23 @@ class Build : NukeBuild, IGlobalTool
             Log.Information("{Name} = {Value}", nameof(IdeaVersion), IdeaVersion);
             Log.Information("{Name} = {Value}", nameof(RdGenVersion), RdGenVersion);
             Log.Information("{Name} = {Value}", nameof(GradlePluginVersion), GradlePluginVersion);
+            Log.Information("{Name} = {Value}", nameof(KotlinJvmVersion), KotlinJvmVersion);
         });
 
-    AbsolutePath WorkingDirectory => (AbsolutePath) EnvironmentInfo.WorkingDirectory;
-
 #if UNIX
-    Tool Gradle => ToolResolver.GetLocalTool(WorkingDirectory / "gradlew");
+    Tool Gradle => ToolResolver.GetTool(WorkingDirectory / "gradlew");
 #else
-    Tool Gradle => ToolResolver.GetLocalTool(WorkingDirectory / "gradlew.bat");
+    Tool Gradle => ToolResolver.GetTool(WorkingDirectory / "gradlew.bat");
 #endif
 
-    [PathExecutable("powershell")] readonly Tool PowerShell;
+    [PathVariable("powershell")] readonly Tool PowerShell;
 
     [LatestNuGetVersion("JetBrains.ReSharper.SDK", IncludePrerelease = true)] readonly NuGetVersion ReSharperVersion;
 
     string ReSharperShortVersion => $"{ReSharperVersion.Major}.{ReSharperVersion.Minor}";
-    string PluginPropsFile => WorkingDirectory / "src" / "dotnet" / "Plugin.props";
+    AbsolutePath PluginPropsFile => WorkingDirectory / "src" / "dotnet" / "Plugin.props";
 
-    bool HasReSharperImplementation => File.Exists(PluginPropsFile);
+    bool HasReSharperImplementation => PluginPropsFile.Exists();
 
     Target UpdateReSharperSdk => _ => _
         .OnlyWhenStatic(() => HasReSharperImplementation)
@@ -63,8 +60,8 @@ class Build : NukeBuild, IGlobalTool
                 ReSharperVersion);
         });
 
-    string GradleBuildFile => WorkingDirectory / "build.gradle";
-    string GradlePropertiesFile => WorkingDirectory / "gradle.properties";
+    AbsolutePath GradleBuildFile => WorkingDirectory / "build.gradle";
+    AbsolutePath GradlePropertiesFile => WorkingDirectory / "gradle.properties";
 
     string IdeaPrereleaseTag => ReSharperVersion.IsPrerelease
         ? $"-{ReSharperVersion.ReleaseLabels.Single().Replace("eap0", "eap").ToUpperInvariant()}-SNAPSHOT"
@@ -76,48 +73,40 @@ class Build : NukeBuild, IGlobalTool
     {
         get
         {
-            var client = new GitHubClient(new ProductHeaderValue(nameof(NukeBuild)));
-            var releases = client.Repository.Release.GetAll("JetBrains", "rd").GetAwaiter().GetResult();
+            // var client = new GitHubClient(new ProductHeaderValue(nameof(NukeBuild)), new InMemoryCredentialStore(new Credentials("TOKEN")));
+            var releases = new GitHubClient(new ProductHeaderValue(nameof(NukeBuild))).Repository.Release.GetAll("JetBrains", "rd").GetAwaiter().GetResult();
             return releases.First(x => Regex.IsMatch(x.Name, @$"^{ReSharperVersion.Major}\.{ReSharperVersion.Minor}\.\d+$")).TagName;
         }
     }
 
-    [LatestGitHubRelease("JetBrains/gradle-intellij-plugin", TrimPrefix = true)] readonly string GradlePluginVersion;
+    // [LatestGitHubRelease("JetBrains/gradle-intellij-plugin", TrimPrefix = true)]
+    readonly string GradlePluginVersion = "1.12.0";
 
     [LatestMavenVersion(
-        repository: "plugins.gradle.org",
+        repository: "plugins.gradle.org/m2",
         groupId: "org.jetbrains.kotlin.jvm",
         artifactId: "org.jetbrains.kotlin.jvm.gradle.plugin")]
     readonly string KotlinJvmVersion;
 
-    bool HasRiderImplementation => File.Exists(GradlePropertiesFile) && File.Exists(GradleBuildFile);
+    bool HasRiderImplementation => GradlePropertiesFile.Exists() && GradleBuildFile.Exists();
 
     Target UpdateGradleBuild => _ => _
+        .Requires(() => KotlinJvmVersion)
+        // .Requires(() => GradlePluginVersion)
         .OnlyWhenStatic(() => HasRiderImplementation)
         .Executes(() =>
         {
-            WriteAllText(
-                GradlePropertiesFile,
-                ReadAllText(GradlePropertiesFile)
-                    .ReplaceRegex(
-                        @"^ProductVersion=.+$",
-                        x => $"ProductVersion={IdeaVersion}", RegexOptions.Multiline));
+            GradlePropertiesFile.UpdateText(_ => _
+                .ReplaceRegex(@"^ProductVersion=.+$", _ => $"ProductVersion={IdeaVersion}",
+                    RegexOptions.Multiline));
 
-            WriteAllText(
-                GradleBuildFile,
-                ReadAllText(GradleBuildFile)
-                    .ReplaceRegex(
-                        @"id 'com\.jetbrains\.rdgen' version '\d+\.\d+(\.\d+)?'",
-                        x => $"id 'com.jetbrains.rdgen' version '{RdGenVersion}'")
-                    .ReplaceRegex(
-                        @"id 'org\.jetbrains\.kotlin\.jvm' version '\d+\.\d+(\.\d+)?'",
-                        x => $"id 'org.jetbrains.kotlin.jvm' version '{KotlinJvmVersion}'")
-                    .ReplaceRegex(
-                        @"id 'org\.jetbrains\.intellij' version '\d+\.\d+(\.\d+)?'",
-                        x => $@"id 'org.jetbrains.intellij' version '{GradlePluginVersion}'"));
+            GradleBuildFile.UpdateText(_ => _
+                .ReplaceRegex(@"id 'com\.jetbrains\.rdgen' version '\d+\.\d+(\.\d+)?'", _ => $"id 'com.jetbrains.rdgen' version '{RdGenVersion.NotNull()}'")
+                .ReplaceRegex(@"id 'org\.jetbrains\.kotlin\.jvm' version '\d+\.\d+(\.\d+)?'", _ => $"id 'org.jetbrains.kotlin.jvm' version '{KotlinJvmVersion}'")
+                .ReplaceRegex(@"id 'org\.jetbrains\.intellij' version '\d+\.\d+(\.\d+)?'", _ => $@"id 'org.jetbrains.intellij' version '{GradlePluginVersion}'"));
         });
 
-    string ChangelogFile => WorkingDirectory / "CHANGELOG.md";
+    AbsolutePath ChangelogFile => WorkingDirectory / "CHANGELOG.md";
     ChangeLog Changelog => ReadChangelog(ChangelogFile);
 
     Target UpdateChangelog => _ => _
@@ -130,7 +119,7 @@ class Build : NukeBuild, IGlobalTool
                 HasRiderImplementation ? "Rider" : null
             }.WhereNotNull();
 
-            var changelogLines = ReadAllLines(ChangelogFile).ToList();
+            var changelogLines = ChangelogFile.ReadAllLines().ToList();
             changelogLines.InsertRange(
                 Changelog.ReleaseNotes[^1].StartIndex,
                 collection: new[]
@@ -139,7 +128,7 @@ class Build : NukeBuild, IGlobalTool
                     $"- Added support for {products.Join(" and ")} {ReSharperShortVersion}",
                     string.Empty
                 });
-            WriteAllLines(ChangelogFile, changelogLines);
+            ChangelogFile.WriteAllLines(changelogLines);
         });
 
     Target FinalizeChangelog => _ => _
@@ -162,7 +151,7 @@ class Build : NukeBuild, IGlobalTool
         .Produces(WorkingDirectory / "output" / "*")
         .Executes(() =>
         {
-            if (File.Exists(GradleBuildFile))
+            if (GradleBuildFile.Exists())
                 Gradle($":buildPlugin -PPluginVersion={ReSharperVersion} --no-daemon");
             else
                 PowerShell($".\\buildPlugin.ps1 -Version {ReSharperVersion}");
@@ -179,7 +168,7 @@ class Build : NukeBuild, IGlobalTool
         .Requires(() => PublishToken)
         .Executes(() =>
         {
-            if (File.Exists(GradleBuildFile))
+            if (GradleBuildFile.Exists())
                 Gradle($":publishPlugin -PPluginVersion={ReSharperVersion} -PPublishToken={PublishToken} --no-daemon", logInvocation: false);
             else
                 PowerShell($".\\publishPlugin.ps1 -Version {ReSharperVersion} -ApiKey {PublishToken}", logInvocation: false);
@@ -190,15 +179,12 @@ class Build : NukeBuild, IGlobalTool
     // [Parameter] readonly string CommitAuthToken;
     // string RemoteUrl => $"https://{CommitUsername}:{CommitAuthToken}@github.com/{GitRepository.Identifier}";
 
-    [Parameter] readonly bool AddTag;
-    [Parameter] readonly string Branch = "master";
-
     Target Commit => _ => _
         .DependsOn(Update)
         .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
         .Executes(() =>
         {
-            if (File.Exists(GradleBuildFile))
+            if (GradleBuildFile.Exists())
             {
                 Git($"add {GradleBuildFile}");
                 Git($"add {GradlePropertiesFile}");
@@ -208,11 +194,9 @@ class Build : NukeBuild, IGlobalTool
             Git($"add {ChangelogFile}");
 
             Git($"commit -m {$"Update SDK to {ReSharperVersion}".DoubleQuote()}");
-
-            if (AddTag)
-                Git($"tag {ReSharperVersion}");
+            Git($"tag {ReSharperVersion}");
 
             // Git($"remote set-url origin {RemoteUrl}", logInvocation: false);
-            Git($"push origin {Branch}");
+            // Git($"push origin {Branch}");
         });
 }
