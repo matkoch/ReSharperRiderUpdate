@@ -35,12 +35,7 @@ class Build : NukeBuild, IGlobalTool
             Log.Information("{Name} = {Value}", nameof(KotlinJvmVersion), KotlinJvmVersion);
         });
 
-#if UNIX
-    Tool Gradle => ToolResolver.GetTool(WorkingDirectory / "gradlew");
-#else
-    Tool Gradle => ToolResolver.GetTool(WorkingDirectory / "gradlew.bat");
-#endif
-
+    [LocalPath(windowsPath: "gradlew.bat", unixPath: "gradlew")] readonly Tool Gradle;
     [PathVariable("powershell")] readonly Tool PowerShell;
 
     [LatestNuGetVersion("JetBrains.ReSharper.SDK", IncludePrerelease = true)] readonly NuGetVersion ReSharperVersion;
@@ -193,7 +188,7 @@ class Build : NukeBuild, IGlobalTool
             Git($"add {PluginPropsFile}");
             Git($"add {ChangelogFile}");
 
-            Git($"commit -m {$"Update SDK to {ReSharperVersion}".DoubleQuote()}");
+            Git($"commit -m {$"build: update SDK to {ReSharperVersion}".DoubleQuote()}");
             Git($"tag {ReSharperVersion}");
 
             // Git($"remote set-url origin {RemoteUrl}", logInvocation: false);
