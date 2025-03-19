@@ -34,7 +34,7 @@ partial class Build
     [LatestGitHubRelease("JetBrains/rd", UseTagName = true)]
     readonly NuGetVersion[] AllRdGenVersions;
 
-    NuGetVersion RdGenVersion => AllRdGenVersions.FirstOrDefault(x => x.Major == ReSharperVersion.Major);
+    NuGetVersion RdGenVersion => AllRdGenVersions.FirstOrDefault(x => !x.IsPrerelease);
 
     [LatestGitHubRelease("JetBrains/gradle-intellij-plugin", IncludePrerelease = false)]
     readonly NuGetVersion GradlePluginVersion;
