@@ -144,6 +144,7 @@ partial class Build : NukeBuild, IGlobalTool
             {
                 Git($"add {GradleBuildFile}");
                 Git($"add {GradlePropertiesFile}");
+                Git($"add {LibsVersionsTomlFile}");
             }
 
             Git($"add {PluginPropsFile}");
