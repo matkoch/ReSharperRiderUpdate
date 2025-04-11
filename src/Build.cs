@@ -22,7 +22,7 @@ partial class Build : NukeBuild, IGlobalTool
     public static int Main() => Execute<Build>(x => x.Versions);
 
     AbsolutePath PluginPropsFile => WorkingDirectory / "src" / "dotnet" / "Plugin.props";
-    AbsolutePath GradleBuildFile => WorkingDirectory / "build.gradle";
+    AbsolutePath GradleBuildFile => WorkingDirectory / "build.gradle.kts";
     AbsolutePath LibsVersionsTomlFile => WorkingDirectory / "gradle" / "libs.versions.toml";
     AbsolutePath GradlePropertiesFile => WorkingDirectory / "gradle.properties";
 
@@ -107,7 +107,7 @@ partial class Build : NukeBuild, IGlobalTool
         .Produces(WorkingDirectory / "output" / "*")
         .Executes(() =>
         {
-            if (GradleBuildFile.Exists())
+            if (HasRiderImplementation)
                 Gradle($":buildPlugin -PPluginVersion={ReSharperVersion} --no-daemon");
             else
                 PowerShell($".\\buildPlugin.ps1 -Version {ReSharperVersion}");
@@ -124,7 +124,7 @@ partial class Build : NukeBuild, IGlobalTool
         .Requires(() => PublishToken)
         .Executes(() =>
         {
-            if (GradleBuildFile.Exists())
+            if (HasRiderImplementation)
                 Gradle($":publishPlugin -PPluginVersion={ReSharperVersion} -PPublishToken={PublishToken} --no-daemon", logInvocation: false);
             else
                 PowerShell($".\\publishPlugin.ps1 -Version {ReSharperVersion} -ApiKey {PublishToken}", logInvocation: false);
@@ -140,7 +140,7 @@ partial class Build : NukeBuild, IGlobalTool
         .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
         .Executes(() =>
         {
-            if (GradleBuildFile.Exists())
+            if (HasRiderImplementation)
             {
                 Git($"add {GradleBuildFile}");
                 Git($"add {GradlePropertiesFile}");
