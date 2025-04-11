@@ -50,12 +50,12 @@ partial class Build : NukeBuild, IGlobalTool
                 .ReplaceRegex("^ProductVersion=.+$", _ => $"ProductVersion={IdeaVersion}", RegexOptions.Multiline));
 
             GradleBuildFile.UpdateText(_ => _
-                .ReplaceRegex(@"id(""org.jetbrains.intellij.platform"") ""\d+\.\d+(\.\d+)?(-\w+)?""",
+                .ReplaceRegex(@"id\(""org.jetbrains.intellij.platform""\) version ""\d+\.\d+(\.\d+)?(-\w+)?""",
                     _ => $@"id(""org.jetbrains.intellij.platform"") version ""{GradlePluginVersion}"""));
 
             LibsVersionsTomlFile.UpdateText(_ => _
-                .ReplaceRegex(@"kotlin = ""\d+\.\d+(\.\d+)?""", _ => $@"kotlin = ""{KotlinJvmVersion}""")
-                .ReplaceRegex(@"rdGen = ""\d+\.\d+(\.\d+)?""", _ => $@"rdGen = ""{RdGenVersion.NotNull()}"""));
+                .ReplaceRegex(@"kotlin = ""\d+\.\d+(\.\d+)?(-\w+)?""", _ => $@"kotlin = ""{KotlinJvmVersion}""")
+                .ReplaceRegex(@"rdGen = ""\d+\.\d+(\.\d+)?(-\w+)?""", _ => $@"rdGen = ""{RdGenVersion.NotNull()}"""));
         });
 
     AbsolutePath ChangelogFile => WorkingDirectory / "CHANGELOG.md";
