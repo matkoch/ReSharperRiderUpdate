@@ -40,9 +40,9 @@ partial class Build : NukeBuild, IGlobalTool
         });
 
     Target UpdateRider => _ => _
-        .Requires(() => KotlinJvmVersion)
-        .Requires(() => GradlePluginVersion)
-        .Requires(() => RdGenVersion)
+        .Requires(() => KotlinJvmVersion != null)
+        // .Requires(() => GradlePluginVersion)
+        .Requires(() => RdGenVersion != null)
         .OnlyWhenStatic(() => HasRiderImplementation)
         .Executes(() =>
         {
@@ -62,7 +62,7 @@ partial class Build : NukeBuild, IGlobalTool
     ChangeLog Changelog => ReadChangelog(ChangelogFile);
 
     Target UpdateChangelog => _ => _
-        .OnlyWhenStatic(() => Changelog.Unreleased == null)
+        .OnlyWhenStatic(() => ChangelogFile.Exists() && Changelog.Unreleased == null)
         .Executes(() =>
         {
             var products = new[]
@@ -85,8 +85,8 @@ partial class Build : NukeBuild, IGlobalTool
 
     Target FinalizeChangelog => _ => _
         .After(UpdateChangelog)
+        .OnlyWhenStatic(() => ChangelogFile.Exists() && Changelog.Unreleased != null)
         .OnlyWhenStatic(() => !ReSharperVersion.IsPrerelease)
-        .OnlyWhenStatic(() => Changelog.Unreleased != null)
         .Executes(() =>
         {
             ChangelogTasks.FinalizeChangelog(ChangelogFile, ReSharperVersion.ToString());
@@ -137,6 +137,7 @@ partial class Build : NukeBuild, IGlobalTool
 
     Target Commit => _ => _
         .DependsOn(Update)
+        .DependsOn(FinalizeChangelog)
         .OnlyWhenDynamic(() => !GitHasCleanWorkingCopy())
         .Executes(() =>
         {
