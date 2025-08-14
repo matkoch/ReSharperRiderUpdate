@@ -48,7 +48,7 @@ partial class Build
         var document = await context.OpenAsync(url);
         return document
             .QuerySelectorAll("table")
-            .Where(x => x.QuerySelectorAll("span").Any(x => x.TextContent == "stdlib"))
+            .Where(x => x.QuerySelectorAll("span, code").Any(x => x.TextContent == "stdlib"))
             .SelectMany(x => x.GetElementsByTagName("tbody"))
             .SelectMany(x => x.QuerySelectorAll("p"))
             .Select(x => x.TextContent)
